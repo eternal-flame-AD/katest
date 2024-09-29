@@ -4,6 +4,9 @@ Release of my personal kana trainer tool, written in Go. Per request of a Fedive
 
 A trainer for kana recognition by generating random character sequences and asking the user to type them in.
 
+
+![Screenshot](assets/screenshot.png)
+
 ## Personal Notes
 
 When I learned Japanese, I found the fastest way for me is first use a flashcard tool to get mostly comfortable, then use this trainer, gradually increasing the set of characters and get to a point where I can read kana fast.
