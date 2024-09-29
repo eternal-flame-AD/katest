@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
 	"os"
@@ -126,6 +127,50 @@ func mustAtoi(s string) int {
 	return res
 }
 
+func maybeScanLine(io io.Reader, act func(string)) {
+	scanner := bufio.NewScanner(io)
+	if scanner.Scan() {
+		if err := scanner.Err(); err != nil {
+			panic(err)
+		}
+		text := scanner.Text()
+		if text != "" {
+			act(text)
+		}
+	}
+}
+
+func interactiveAskOptions(charset *string, sentenceLenDesc *string, requireType *bool, fastMode *bool, acc *bool) {
+	fmt.Println("Welcome to romaji test!")
+	fmt.Println("Please enter the following parameters.")
+	fmt.Println("Sample charset specifiers:")
+	fmt.Println("  50 -> 50 common hiragana and katakana")
+	fmt.Println("  50:h -> 50 common hiragana")
+	fmt.Println("  50:k -> 50 common katakana")
+	fmt.Println("  all -> all kana")
+	fmt.Println("  ka+ki+ku:h -> kana for ka, ki, ku, hiragana only")
+	fmt.Print("charset (default 50): ")
+	maybeScanLine(os.Stdin, func(text string) {
+		*charset = text
+	})
+	fmt.Print("sentence length (default 5:10): ")
+	maybeScanLine(os.Stdin, func(text string) {
+		*sentenceLenDesc = text
+	})
+	fmt.Print("require type (default false/0): ")
+	maybeScanLine(os.Stdin, func(text string) {
+		*requireType = text == "true" || text == "1"
+	})
+	fmt.Print("fast mode (default false/0): ")
+	maybeScanLine(os.Stdin, func(text string) {
+		*fastMode = text == "true" || text == "1"
+	})
+	fmt.Print("accuracy mode (default false/0): ")
+	maybeScanLine(os.Stdin, func(text string) {
+		*acc = text == "true" || text == "1"
+	})
+}
+
 func main() {
 	charset := flag.String("charset", "50", "charset to use, a comma-separated list of characters.")
 	sentenceLenDesc := flag.String("length", "5:10", "sentence length")
@@ -133,6 +178,11 @@ func main() {
 	fastMode := flag.Bool("fast", false, "fast mode, do not require split by space, only use this when your error rate is low and want better speed")
 	seed := flag.Int64("seed", time.Now().Unix(), "seed for random number generator")
 	acc := flag.Bool("acc", false, "enable accuracy mode, show statistics after each round")
+	flag.Bool("default", false, "use default settings, do not ask for parameters")
+
+	if len(os.Args) == 1 && isTTY() {
+		interactiveAskOptions(charset, sentenceLenDesc, requireType, fastMode, acc)
+	}
 
 	rnd := rand.New(rand.NewSource(*seed))
 
